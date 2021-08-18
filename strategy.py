@@ -19,14 +19,26 @@ def run_backtest_onpercent(amount_invested, swap_path, decimal_diff,swap_cost,
 
     for i,row in tqdm(swap_data.iterrows(), total=len(swap_data)):
         prices = [row['token0_price'], row['token1_price']]
-        cp = row.loc['cp']
+        cp = row['cp']
         #copy current row
         hold_row = holdings.loc[i]
         hold_row = update_row(hold_row, current_range, liquidity, row)
+        
+        # swap fee calculation:
+        ratio = liquidity/(row['liquidity_adjusted']+liquidity)
+        hold_row['percentage_tick'] = ratio
+        # condition to check we are in range to earn fees.
+        if cp<=current_range[1] or cp>=current_range[0]:
+            ratio = 0
+
+        # calculate the fees and update the row    
+        hold_row['fee_amount0']=ratio*row['fee_amount0']
+        hold_row['fee_amount1']=ratio*row['fee_amount1']
+        fees_earned_sofar[0] +=(hold_row['fee_amount0'])
+        fees_earned_sofar[1] +=(hold_row['fee_amount1'])
 
         # calculate percentage_change
         percentage_change = 100*abs(cp-start_price)/start_price
-        
         # check to rebalance
         if percentage_change > move_percent:
             current_range = [row['ub'], row['lb']]
@@ -44,19 +56,6 @@ def run_backtest_onpercent(amount_invested, swap_path, decimal_diff,swap_cost,
             fees_earned_sofar = [0,0]
             liquidity =  get_liquidity_based_usd(usd_amount, [row['token0_price'], row['token1_price']], *current_range)
             hold_row = update_row(hold_row, current_range, liquidity, row)
-
-        # swap fee calculation:
-        ratio = liquidity/(row['liquidity_adjusted']+liquidity)
-        hold_row['percentage_tick'] = ratio
-        # condition to check we are in range to earn fees.
-        if cp<=current_range[1] or cp>=current_range[0]:
-            ratio = 0
-
-        # calculate the fees and update the row    
-        hold_row['fee_amount0']=ratio*row['fee_amount0']
-        hold_row['fee_amount1']=ratio*row['fee_amount1']
-        fees_earned_sofar[0] +=(hold_row['fee_amount0'])
-        fees_earned_sofar[1] +=(hold_row['fee_amount1'])
 
         # paste updated row
         holdings.loc[i] = hold_row

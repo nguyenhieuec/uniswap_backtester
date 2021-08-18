@@ -12,13 +12,12 @@ def run_backtest_onpercent(amount_invested, swap_path, decimal_diff,swap_cost,
 
     swap_data, gas_price = signal(swap_path, gas_price, range_percent, decimal_diff)
 
-    holdings, liquidity, current_range, reserves = initialize_holdings(swap_data, amount_invested)
+    holdings, liquidity, current_range = initialize_holdings(swap_data, amount_invested)
     start_price = swap_data['cp'].iloc[0]
     fees_earned_sofar = [0,0]
     GAS_COST = 4.7e5
 
     for i,row in tqdm(swap_data.iterrows(), total=len(swap_data)):
-        prices = [row['token0_price'], row['token1_price']]
         cp = row['cp']
         #copy current row
         hold_row = holdings.loc[i]

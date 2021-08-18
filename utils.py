@@ -26,8 +26,9 @@ def initialize_holdings(swap_data, amount_invested):
     # dataframe to keep track of holdings
     columns = ['rebalance', 'usd', 'fees', 'gas_cost', 'swap_cost', 'percentage_tick', 'return_on_swap', 'fee_usd', 
                 'reserve0', 'reserve1','ub', 'lb', 'cp', 'fee_amount0', 'fee_amount1', 'liquidity']
-    holdings = pd.DataFrame(index=swap_data.index, columns=columns, dtype=float)
+    holdings = pd.DataFrame(0.0,index=swap_data.index, columns=columns, dtype=float)
     # initialize the values for starting backtest
+
     current_range = list(swap_data.iloc[0][['ub', 'lb']].values)
     liquidity = get_liquidity_based_usd(amount_invested, list(swap_data.iloc[0][['token0_price', 'token1_price']].values), *current_range)
     return holdings, liquidity, current_range

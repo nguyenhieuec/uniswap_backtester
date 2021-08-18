@@ -24,28 +24,13 @@ def signal(swap_path, gas_price, range_percent, decimal_diff):
 
 def initialize_holdings(swap_data, amount_invested):
     # dataframe to keep track of holdings
-    holdings = pd.DataFrame(index=swap_data.index)
-    holdings['rebalance'] = 0
-    holdings['usd'] = 0
-    holdings['fees'] = 0
-    holdings['gas_cost'] = 0
-    holdings['swap_cost'] = 0
-    holdings['percentage_tick'] = 0
-    holdings['return_on_swap'] = 0
-    holdings['fee_usd'] = 0
-    holdings['reserve0'] = 0
-    holdings['reserve1'] = 0
-    holdings['ub'] = 0
-    holdings['lb'] = 0
-    holdings['cp'] = 0
-    holdings['fee_amount0'] = 0
-    holdings['fee_amount1'] = 0
-    holdings['liquidity'] = 0
+    columns = ['rebalance', 'usd', 'fees', 'gas_cost', 'swap_cost', 'percentage_tick', 'return_on_swap', 'fee_usd', 
+                'reserve0', 'reserve1','ub', 'lb', 'cp', 'fee_amount0', 'fee_amount1', 'liquidity']
+    holdings = pd.DataFrame(index=swap_data.index, columns=columns, dtype=float)
     # initialize the values for starting backtest
     current_range = list(swap_data.iloc[0][['ub', 'lb']].values)
     liquidity = get_liquidity_based_usd(amount_invested, list(swap_data.iloc[0][['token0_price', 'token1_price']].values), *current_range)
-    reserves = get_amounts(liquidity, swap_data.iloc[0]['cp'], *current_range)
-    return holdings, liquidity, current_range, reserves
+    return holdings, liquidity, current_range
 
 def update_row(hold_row, current_range, liquidity, row):
     hold_row['ub'] = current_range[0]

@@ -9,7 +9,6 @@ def get_liquidity(amountToken0, amountToken1, current_price, upper_limit, lower_
     elif current_price <= upper_limit:
         liquidity0 = float(amountToken0)*(sqrU*sqrC)/(sqrU-sqrC)
         liquidity1 = float(amountToken1)/(sqrC-sqrL)
-        # print(liquidity0, liquidity1)
         liquidity = min(liquidity0,liquidity1)
     else:
         liquidity = float(amountToken1)/(sqrU-sqrL)
@@ -35,7 +34,7 @@ def get_amounts(liquidity, current_price, upper_limit, lower_limit):
 
 def get_liquidity_based_usd(usd_amount,  prices, upper_limit, lower_limit):
     priceToken0, priceToken1 = prices
-    current_price = priceToken1/priceToken0 
+    current_price = priceToken0/priceToken1
     sqrC = np.sqrt(current_price)
     sqrL = np.sqrt(lower_limit)
     sqrU = np.sqrt(upper_limit)

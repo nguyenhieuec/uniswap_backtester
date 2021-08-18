@@ -42,9 +42,9 @@ def initialize_holdings(swap_data, amount_invested):
     holdings['fee_amount1'] = 0
     holdings['liquidity'] = 0
     # initialize the values for starting backtest
-    current_range = [swap_data['ub'].iloc[0], swap_data['lb'].iloc[0]]
-    liquidity = get_liquidity_based_usd(amount_invested, [swap_data['token0_price'].iloc[0], swap_data['token1_price'].iloc[0]], *current_range)
-    reserves = get_amounts(liquidity, swap_data.cp.iloc[0], swap_data.ub.iloc[0], swap_data.lb.iloc[0])
+    current_range = list(swap_data.iloc[0][['ub', 'lb']].values)
+    liquidity = get_liquidity_based_usd(amount_invested, list(swap_data.iloc[0][['token0_price', 'token1_price']].values), *current_range)
+    reserves = get_amounts(liquidity, swap_data.iloc[0]['cp'], *current_range)
     return holdings, liquidity, current_range, reserves
 
 def update_row(hold_row, current_range, liquidity, row):

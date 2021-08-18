@@ -17,6 +17,7 @@ def signal(swap_path, gas_price, range_percent, decimal_diff):
     swap_data['lb'] = lb.loc[swap_data.index]
     swap_data['cp'] = price_df.price.loc[swap_data.index]
     swap_data['ub'] = ub.loc[swap_data.index]
+    swap_data['token1_price'] = swap_data['token0_price']/swap_data['cp']
     gas_price = gas_price.loc[swap_data.index]
     return swap_data, gas_price
 
@@ -39,7 +40,7 @@ def initialize_holdings(swap_data, amount_invested):
     holdings['cp'] = 0
     holdings['fee_amount0'] = 0
     holdings['fee_amount1'] = 0
-    
+    holdings['liquidity'] = 0
     # initialize the values for starting backtest
     current_range = [swap_data['ub'].iloc[0], swap_data['lb'].iloc[0]]
     liquidity = get_liquidity_based_usd(amount_invested, [swap_data['token0_price'].iloc[0], swap_data['token1_price'].iloc[0]], *current_range)

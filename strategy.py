@@ -2,7 +2,7 @@ import sys
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from utils import signal, initialize_holdings, update_row
+from utils import signal, initialize_holdings, update_row, update_fees
 from liquidity import  get_amounts, get_liquidity_based_usd
 
 
@@ -36,6 +36,8 @@ def run_backtest_onpercent(amount_invested, swap_path, decimal_diff,swap_cost,
         fees_earned_sofar[0] +=(hold_row['fee_amount0'])
         fees_earned_sofar[1] +=(hold_row['fee_amount1'])
 
+        # update the fees of holdings
+        hold_row = update_fees(hold_row, fees_earned_sofar, row)
         # calculate percentage_change
         percentage_change = 100*abs(cp-start_price)/start_price
         # check to rebalance

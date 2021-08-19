@@ -25,7 +25,7 @@ def signal(swap_path, gas_price, range_percent, decimal_diff):
 def initialize_holdings(swap_data, amount_invested):
     # dataframe to keep track of holdings
     columns = ['rebalance', 'usd', 'fees', 'gas_cost', 'swap_cost', 'percentage_tick', 'return_on_swap', 'fee_usd', 
-                'reserve0', 'reserve1','ub', 'lb', 'cp', 'fee_amount0', 'fee_amount1', 'liquidity']
+                'reserve0', 'reserve1','ub', 'lb', 'cp', 'fee_amount0', 'fee_amount1', 'liquidity', 'usd_with_fees']
     holdings = pd.DataFrame(0.0,index=swap_data.index, columns=columns, dtype=float)
     # initialize the values for starting backtest
 
@@ -41,4 +41,9 @@ def update_row(hold_row, current_range, liquidity, row):
     # calculate the new reserves 
     hold_row['reserve0'], hold_row['reserve1'] = get_amounts(liquidity, row['cp'],*current_range)
     hold_row['usd'] = hold_row['reserve0']*row['token0_price'] + hold_row['reserve1']*row['token1_price']
+    return hold_row
+
+
+def update_fees(hold_row, fees_earned_sofar, row):
+    hold_row['usd_with_fees'] = hold_row['usd'] + (fees_earned_sofar[0]*row['token0_price']) + (fees_earned_sofar[1]*row['token1_price'])
     return hold_row

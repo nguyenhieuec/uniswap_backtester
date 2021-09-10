@@ -10,7 +10,7 @@ def get_swap_data_per_block(path):
     out = out.drop(columns=['Unnamed: 0', 'BLOCKCHAIN', 'RECIPIENT', 'SENDER','POOL_ADDRESS','POOL_NAME',
                     'TOKEN0_ADDRESS','TOKEN1_ADDRESS', 'TOKEN1_SYMBOL', 'TOKEN0_SYMBOL'])
     out = out.groupby('BLOCK_ID').agg({'LIQUIDITY_ADJUSTED': np.mean, 'TOKEN0_PRICE': np.mean, 'TOKEN1_PRICE':np.mean, 'AMOUNT0_ADJUSTED':np.sum,
-                                            'AMOUNT0_USD':np.sum, 'AMOUNT1_ADJUSTED':np.sum, 'AMOUNT1_USD':np.sum, 'TICK':np.mean})
+                                            'AMOUNT0_USD':np.sum, 'AMOUNT1_ADJUSTED':np.sum, 'AMOUNT1_USD':np.sum, 'TICK':np.mean, 'BLOCK_TIMESTAMP': 'first'})
     out['FEE_AMOUNT0'] = fee*out['AMOUNT0_ADJUSTED'].apply(lambda x: 0 if x<0 else x)
     out['FEE_AMOUNT1'] = fee*out['AMOUNT1_ADJUSTED'].apply(lambda x: 0 if x<0 else x)
     out.columns = list(map(str.lower, out.columns))

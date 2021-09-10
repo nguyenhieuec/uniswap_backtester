@@ -2,7 +2,7 @@ import sys
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from utils import signal, initialize_holdings, update_row, update_fees, put_signal
+from utils import signal, initialize_holdings, update_row, update_fees, get_signal
 from liquidity import  get_amounts, get_liquidity_based_usd
 
 
@@ -65,11 +65,10 @@ def run_backtest_onpercent(amount_invested, swap_path, decimal_diff,swap_cost,
 
 
 
-def run_put_strategy(amount_invested, swap_path, decimal_diff,swap_cost, 
-                            range_percent, is_complete, duration, gas_price, disable_costs): 
+def run_put_strategy(amount_invested, swap_path, decimal_diff,swap_cost,get_range, 
+                            duration, gas_price, disable_costs, params): 
 
-    swap_data, gas_price = put_signal(swap_path, gas_price, decimal_diff=decimal_diff, is_complete=is_complete, range_percent=range_percent)
-
+    swap_data, gas_price = get_signal(swap_path, gas_price, decimal_diff=decimal_diff, get_range=get_range, params=params)
     holdings, liquidity, current_range = initialize_holdings(swap_data, amount_invested)
     start_price = swap_data['cp'].iloc[0]
     fees_earned_sofar = [0,0]
@@ -121,4 +120,4 @@ def run_put_strategy(amount_invested, swap_path, decimal_diff,swap_cost,
         if holdings.loc[i, 'usd_with_fees']==np.nan:
             print('something problem', i)
     holdings.set_index(swap_data['block_timestamp'], inplace=True)
-    return {'range_percent': range_percent, 'duration': duration, 'holdings': holdings}
+    return {'range_percent': params['range_percent'], 'duration': duration, 'holdings': holdings}

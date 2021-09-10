@@ -43,6 +43,22 @@ def put_signal(swap_path, gas_price, decimal_diff, is_complete, range_percent):
     return swap_data, gas_price
 
 
+def get_signal(swap_path, gas_price, get_range, decimal_diff, params):
+    swap_data = get_swap_data_per_block(swap_path)
+    price_df = get_pricing_per_block(path=swap_path, decimals_diff=decimal_diff)
+    lb, ub = get_range(price_df = price_df, params=params)
+    # intialize the params and load the data
+    swap_data = get_swap_data_per_block(swap_path)  
+    common = lb[lb.index.isin(swap_data.index)]
+    common = common[common.index.isin(gas_price.index)]
+    swap_data = swap_data.loc[common.index]
+    swap_data['lb'] = lb.loc[swap_data.index]
+    swap_data['cp'] = price_df.price.loc[swap_data.index]
+    swap_data['ub'] = ub.loc[swap_data.index]
+    swap_data['token1_price'] = swap_data['token0_price']/swap_data['cp']
+    gas_price = gas_price.loc[swap_data.index]
+    return swap_data, gas_price
+
 
 def initialize_holdings(swap_data, amount_invested):
     # dataframe to keep track of holdings

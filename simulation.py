@@ -1,17 +1,16 @@
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from liquidity import get_liquidity_based_usd
 from utils import initialize_holdings, update_row, update_fees
 
 
-def format_prices(price, start_block, start_time):
-    blocks = [i for i in range(start_block, start_block+len(price))]
-    timestamps = [pd.Timedelta('13 sec')*i + start_time for i in range(start_block, start_block+len(price))]
-    prices = pd.DataFrame(index=blocks)
+def format_prices(price, block, block_timestamp):
+    prices = pd.DataFrame(index=[i for i in range(block[0], block[-1]+1)])
     prices['price'] = price
-    prices['block_timestamp'] = timestamps
-    return prices
-
+    swap_price = prices.loc[block].copy()
+    swap_price['block_timestamp'] = block_timestamp
+    return swap_price
 
 def run_simulation(amount_invested, prices, decimal_diff, get_range,
                 duration,  params, token_volumes, tick_percent, fee_teir): 
@@ -37,9 +36,13 @@ def run_simulation(amount_invested, prices, decimal_diff, get_range,
         hold_row = holdings.loc[i]
         hold_row = update_row(hold_row, current_range, liquidity, row)
         
+        ratio = tick_percent
         # swap fee calculation:
-        hold_row['fee_amount0']=tick_percent*row['fee_amount0']
-        hold_row['fee_amount1']=tick_percent*row['fee_amount1']
+        if cp<=current_range[1] or cp>=current_range[0]:
+            ratio = 0
+
+        hold_row['fee_amount0']=ratio*row['fee_amount0']
+        hold_row['fee_amount1']=ratio*row['fee_amount1']
         fees_earned_sofar[0] +=(hold_row['fee_amount0'])
         fees_earned_sofar[1] +=(hold_row['fee_amount1'])
 

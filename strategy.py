@@ -82,11 +82,10 @@ def run_put_strategy(amount_invested, swap_path, decimal_diff,swap_cost,get_rang
         
         # swap fee calculation:
         ratio = liquidity/(row['liquidity_adjusted']+liquidity)
-        hold_row['percentage_tick'] = ratio
         # condition to check we are in range to earn fees.
         if cp<=current_range[1] or cp>=current_range[0]:
             ratio = 0
-
+        hold_row['percentage_tick'] = ratio
         # calculate the fees and update the row    
         hold_row['fee_amount0']=ratio*row['fee_amount0']
         hold_row['fee_amount1']=ratio*row['fee_amount1']

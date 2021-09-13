@@ -40,7 +40,7 @@ def run_simulation(amount_invested, prices, decimal_diff, get_range,
         # swap fee calculation:
         if cp<=current_range[1] or cp>=current_range[0]:
             ratio = 0
-
+        hold_row['percentage_tick'] = ratio
         hold_row['fee_amount0']=ratio*row['fee_amount0']
         hold_row['fee_amount1']=ratio*row['fee_amount1']
         fees_earned_sofar[0] +=(hold_row['fee_amount0'])

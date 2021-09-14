@@ -30,6 +30,7 @@ def run_simulation(amount_invested, prices, decimal_diff, get_range,
     start_price = swap_data['cp'].iloc[0]
     fees_earned_sofar = [0,0]
     start_time = swap_data['block_timestamp'].iloc[0]
+    start_price = swap_data['cp'].iloc[0]
     for i,row in tqdm(swap_data.iterrows(), total=len(swap_data)):
         cp = row['cp']
         #copy current row
@@ -50,7 +51,8 @@ def run_simulation(amount_invested, prices, decimal_diff, get_range,
         hold_row = update_fees(hold_row, fees_earned_sofar, row)
         # calculate time_fiff
         time_since = (row['block_timestamp'] - start_time)/pd.Timedelta(duration)
-        if time_since >= 1:
+        price_condition = 100*(row['cp']-start_price)/start_price
+        if time_since >= 1 and price_condition > -20 :
             current_range = [row['ub'], row['lb']]
             start_price = cp
             start_time = row['block_timestamp']

@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from utils import signal, initialize_holdings, update_row, update_fees, get_signal
-from liquidity import  get_amounts, get_liquidity_based_usd
+from liquidity import get_liquidity_based_usd
 
 
 
@@ -70,7 +70,6 @@ def run_put_strategy(amount_invested, swap_path, decimal_diff,swap_cost,get_rang
 
     swap_data, gas_price = get_signal(swap_path, gas_price, decimal_diff=decimal_diff, get_range=get_range, params=params)
     holdings, liquidity, current_range = initialize_holdings(swap_data, amount_invested)
-    start_price = swap_data['cp'].iloc[0]
     fees_earned_sofar = [0,0]
     GAS_COST = 4.7e5
     start_time = swap_data['block_timestamp'].iloc[0]
@@ -98,7 +97,6 @@ def run_put_strategy(amount_invested, swap_path, decimal_diff,swap_cost,get_rang
         time_since = (row['block_timestamp'] - start_time)/pd.Timedelta(duration)
         if time_since >= 1:
             current_range = [row['ub'], row['lb']]
-            start_price = cp
             start_time = row['block_timestamp']
             hold_row['rebalance'] = 1
             usd_amount = hold_row['usd']

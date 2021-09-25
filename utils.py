@@ -44,7 +44,6 @@ def put_signal(swap_path, gas_price, decimal_diff, is_complete, range_percent):
 
 
 def get_signal(swap_path, gas_price, get_range, decimal_diff, params):
-    swap_data = get_swap_data_per_block(swap_path)
     price_df = get_pricing_per_block(path=swap_path, decimals_diff=decimal_diff)
     lb, ub = get_range(price_df = price_df, params=params)
     # intialize the params and load the data

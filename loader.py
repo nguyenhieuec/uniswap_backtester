@@ -6,13 +6,18 @@ def get_swap_data_per_block(path):
     out = pd.read_csv(path)
     out.BLOCK_TIMESTAMP = pd.to_datetime(out.BLOCK_TIMESTAMP) 
     fee_map = {'60': 3000, '200':10000, '10':500}
+    # get the fee tier from pool name
     fee = fee_map[out['POOL_NAME'].iloc[0].split(' ')[-1]]/1e6
+    # remove unrequired columns
     out = out.drop(columns=['Unnamed: 0', 'BLOCKCHAIN', 'RECIPIENT', 'SENDER','POOL_ADDRESS','POOL_NAME',
                     'TOKEN0_ADDRESS','TOKEN1_ADDRESS', 'TOKEN1_SYMBOL', 'TOKEN0_SYMBOL'])
+    # aggregate quantities by block
     out = out.groupby('BLOCK_ID').agg({'LIQUIDITY_ADJUSTED': np.mean, 'TOKEN0_PRICE': np.mean, 'TOKEN1_PRICE':np.mean, 'AMOUNT0_ADJUSTED':np.sum,
                                             'AMOUNT0_USD':np.sum, 'AMOUNT1_ADJUSTED':np.sum, 'AMOUNT1_USD':np.sum, 'TICK':np.mean, 'BLOCK_TIMESTAMP': 'first'})
+    # calculate fee amounts
     out['FEE_AMOUNT0'] = fee*out['AMOUNT0_ADJUSTED'].apply(lambda x: 0 if x<0 else x)
     out['FEE_AMOUNT1'] = fee*out['AMOUNT1_ADJUSTED'].apply(lambda x: 0 if x<0 else x)
+    # convert column names to lower case
     out.columns = list(map(str.lower, out.columns))
     return out
 

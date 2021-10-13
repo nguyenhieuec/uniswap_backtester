@@ -227,8 +227,9 @@ def run_put_strategy_multi(amount_invested, swap_path, decimal_diff,swap_cost,ge
         # rebalance condition for second position
         pct_change = 100*(row['token1_price'] - start_price)/start_price
         if pct_change < -1*params['range_percent2'] and amount2 !=0:
-            lb = current_range[1]
-            ub = current_range[1]*(1+params['range_percent2']/100)*(1/1.0001)
+            lb = row['cp'] #current_range[1]*(1+params['range_percent2']/100)*(1/1.0001)
+            ub = lb/(1+params['range_percent']/100)
+            print(row['token1_price'], 1/lb, 1/ub)
             current_range_2 = [ub, lb]
             liquidity_2 =  get_liquidity_based_usd(amount2*(1-3e-3), [row['token0_price'], row['token1_price']], *current_range_2)
             # update usd state

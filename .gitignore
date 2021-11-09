@@ -2,3 +2,4 @@ __pycache__
 results/
 results.zip
 .ipynb_checkpoints/
+.env

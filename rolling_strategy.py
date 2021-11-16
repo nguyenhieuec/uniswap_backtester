@@ -1,6 +1,6 @@
 import math
 import univ3_funcs
-import numpy as np
+import pandas as pd
 
 
 class RollingStrategy:
@@ -23,15 +23,13 @@ class RollingStrategy:
         #####################################
         FIRST_POSITION_DURATION = (current_strat_obs.timestamp - strategy_info['first_position_timestamp'])/pd.Timedelta(self.duration)
         SECOND_POSITION_DURATION = (current_strat_obs.timestamp - strategy_info['second_position_timestamp'])/pd.Timedelta(self.duration)
+        
         if FIRST_POSITION_DURATION > 1:
             # Remove liquidity from first position
             current_strat_obs.remove_liquidity([0])
             # Check removed position     
             self.check_position_initialized(current_strat_obs)
-            # TODO: Clean up returns
             liq_range,strategy_info = self.set_liquidity_ranges(current_strat_obs)
-            # update the postion ranges
-            liq_ranges = [liq_range, current_strat_obs.liquidity_ranges[1]]
 
         if SECOND_POSITION_DURATION > 1:
             # Remove liquidity from first position
@@ -40,10 +38,7 @@ class RollingStrategy:
             self.check_position_initialized(current_strat_obs)
             
             liq_range,strategy_info = self.set_liquidity_ranges(current_strat_obs)
-            # update the postion ranges
-            liq_ranges = [current_strat_obs.liquidity_ranges[0], liq_range]
-
-        return liq_ranges,strategy_info        
+        return liq_range,strategy_info        
 
 
 

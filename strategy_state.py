@@ -65,12 +65,12 @@ class StrategyObservation:
                 self.liquidity_ranges[i]['time'] = self.time
                 
                 if self.simulate_strat:
-                    amount_0, amount_1 = UNI_v3_funcs.get_amounts(self.price_tick,
-                                                                 self.liquidity_ranges[i]['lower_bin_tick'],
-                                                                 self.liquidity_ranges[i]['upper_bin_tick'],
-                                                                 self.liquidity_ranges[i]['position_liquidity'],
-                                                                 self.decimals_0,
-                                                                 self.decimals_1)
+                    amount_0, amount_1 = univ3_funcs.get_amounts(self.price_tick,
+                                                                self.liquidity_ranges[i]['lower_bin_tick'],
+                                                                self.liquidity_ranges[i]['upper_bin_tick'],
+                                                                self.liquidity_ranges[i]['position_liquidity'],
+                                                                self.decimals_0,
+                                                                self.decimals_1)
 
                     self.liquidity_ranges[i]['token_0'] = amount_0
                     self.liquidity_ranges[i]['token_1'] = amount_1
@@ -82,7 +82,7 @@ class StrategyObservation:
                 self.token_1_fees                   = fees_token_1
                 
             # Check strategy and potentially reset the ranges
-            self.liquidity_ranges,self.strategy_info     = strategy_in.check_strategy(self,strategy_info)
+            self.liquidity_ranges,self.strategy_info     = strategy_in.check_strategy(self,strategy_info) # self is current strategy observation.
                 
     ########################################################
     # Accrue earned fees (not supply into LP yet)
@@ -120,24 +120,25 @@ class StrategyObservation:
     # Rebalance: Remove all liquidity positions
     # Not dependent on strategy
     ########################################################   
-    def remove_liquidity(self):
+    def remove_liquidity(self, positions):
     
         removed_amount_0    = 0.0
         removed_amount_1    = 0.0
         
         # For every bin, get the amounts you currently have and withdraw
-        for i in range(len(self.liquidity_ranges)):
+        for i in positions:
             
             position_liquidity = self.liquidity_ranges[i]['position_liquidity']
-           
+            
             TICK_A             = self.liquidity_ranges[i]['lower_bin_tick']
             TICK_B             = self.liquidity_ranges[i]['upper_bin_tick']
             
-            token_amounts      = UNI_v3_funcs.get_amounts(self.price_tick,TICK_A,TICK_B,
-                                                     position_liquidity,self.decimals_0,self.decimals_1)   
+            token_amounts      = univ3_funcs.get_amounts(self.price_tick,TICK_A,TICK_B,
+                                                    position_liquidity,self.decimals_0,self.decimals_1)   
             removed_amount_0   += token_amounts[0]
             removed_amount_1   += token_amounts[1]
-        
+            # update removed liqudity
+            self.liquidity_ranges[i]['position_liquidity'] = 0
         self.liquidity_in_0 = removed_amount_0 + self.token_0_left_over + self.token_0_fees_uncollected
         self.liquidity_in_1 = removed_amount_1 + self.token_1_left_over + self.token_1_fees_uncollected
         
@@ -147,4 +148,46 @@ class StrategyObservation:
         self.token_0_fees_uncollected = 0.0
         self.token_1_fees_uncollected = 0.0
         
+########################################################
+# Simulate reset strategy using a Pandas series called price_data, which has as an index
+# the time point, and contains the pool price (token 1 per token 0)
+########################################################
+
+def simulate_strategy(price_data,swap_data,strategy_in,
+                       liquidity_in_0,liquidity_in_1,fee_tier,decimals_0,decimals_1):
+
+    strategy_results = []    
   
+    # Go through every time period in the data that was passet
+    for i in range(len(price_data)): 
+        # Strategy Initialization
+        if i == 0:
+            strategy_results.append(StrategyObservation(price_data.index[i],
+                                              price_data[i],
+                                              strategy_in,
+                                              liquidity_in_0,liquidity_in_1,
+                                              fee_tier,decimals_0,decimals_1))
+        # After initialization
+        else:
+            
+            relevant_swaps = swap_data[price_data.index[i-1]:price_data.index[i]]
+            strategy_results.append(StrategyObservation(price_data.index[i],
+                                              price_data[i],
+                                              strategy_in,
+                                              strategy_results[i-1].liquidity_in_0,
+                                              strategy_results[i-1].liquidity_in_1,
+                                              strategy_results[i-1].fee_tier,
+                                              strategy_results[i-1].decimals_0,
+                                              strategy_results[i-1].decimals_1,
+                                              strategy_results[i-1].token_0_left_over,
+                                              strategy_results[i-1].token_1_left_over,
+                                              strategy_results[i-1].token_0_fees_uncollected,
+                                              strategy_results[i-1].token_1_fees_uncollected,
+                                              strategy_results[i-1].liquidity_ranges,
+                                              strategy_results[i-1].strategy_info,
+                                              relevant_swaps))
+            
+    return strategy_results
+
+
+

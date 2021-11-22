@@ -7,7 +7,8 @@ class RollingStrategy:
     def __init__(self, duration_param, percentage_param):
         self.duration  = duration_param
         self.percentage = percentage_param
-        self.position_status = None
+        # as both positions are undefined position_status is three
+        self.position_status = 3
         
     #####################################
     # Check if a rebalance is necessary. 
@@ -22,7 +23,6 @@ class RollingStrategy:
         #
         #####################################
         FIRST_POSITION_DURATION = (current_strat_obs.time - strategy_info['first_position_timestamp'])/pd.Timedelta(self.duration)
-        SECOND_POSITION_DURATION = (current_strat_obs.time - strategy_info['second_position_timestamp'])/pd.Timedelta(self.duration)
         
         if FIRST_POSITION_DURATION > 1:
             # Remove liquidity from first position
@@ -31,13 +31,15 @@ class RollingStrategy:
             self.check_position_initialized(current_strat_obs)
             liq_range,strategy_info = self.set_liquidity_ranges(current_strat_obs)
 
-        if SECOND_POSITION_DURATION > 1:
-            # Remove liquidity from first position
-            current_strat_obs.remove_liquidity([1])
-            # Check removed position     
-            self.check_position_initialized(current_strat_obs)
-            
-            liq_range,strategy_info = self.set_liquidity_ranges(current_strat_obs)
+        if 'second_position_timestamp' in strategy_info.keys():
+            SECOND_POSITION_DURATION = (current_strat_obs.time - strategy_info['second_position_timestamp'])/pd.Timedelta(self.duration)
+            if SECOND_POSITION_DURATION > 1:
+                # Remove liquidity from first position
+                current_strat_obs.remove_liquidity([1])
+                # Check removed position     
+                self.check_position_initialized(current_strat_obs)
+                
+                liq_range,strategy_info = self.set_liquidity_ranges(current_strat_obs)
         return liq_range,strategy_info        
 
 
@@ -120,5 +122,4 @@ class RollingStrategy:
                             'reset_time'         : current_strat_obs.time}
             liq_ranges = [pos_liq_range, none_position]
             strategy_info['first_position_timestamp'] = current_strat_obs.time
-
         return liq_ranges, strategy_info

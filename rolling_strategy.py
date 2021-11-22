@@ -8,11 +8,11 @@ class RollingStrategy:
         self.duration  = duration_param
         self.percentage = percentage_param
         self.position_status = None
- #####################################
+        
+    #####################################
     # Check if a rebalance is necessary. 
     # If it is, remove the liquidity and set new ranges
     #####################################
-        
     def check_strategy(self,current_strat_obs,strategy_info):
         
         #####################################
@@ -21,8 +21,8 @@ class RollingStrategy:
         # 1. When position timestamp has passed duration
         #
         #####################################
-        FIRST_POSITION_DURATION = (current_strat_obs.timestamp - strategy_info['first_position_timestamp'])/pd.Timedelta(self.duration)
-        SECOND_POSITION_DURATION = (current_strat_obs.timestamp - strategy_info['second_position_timestamp'])/pd.Timedelta(self.duration)
+        FIRST_POSITION_DURATION = (current_strat_obs.time - strategy_info['first_position_timestamp'])/pd.Timedelta(self.duration)
+        SECOND_POSITION_DURATION = (current_strat_obs.time - strategy_info['second_position_timestamp'])/pd.Timedelta(self.duration)
         
         if FIRST_POSITION_DURATION > 1:
             # Remove liquidity from first position
@@ -76,7 +76,6 @@ class RollingStrategy:
             limit_amount_1 = current_strat_obs.liquidity_in_1
 
 
-
         liquidity_placed_limit        = int(univ3_funcs.get_liquidity(current_strat_obs.price_tick,TICK_A,TICK_B, \
                                                                     limit_amount_0,limit_amount_1,current_strat_obs.decimals_0,current_strat_obs.decimals_1))
         limit_0_amount,limit_1_amount =     univ3_funcs.get_amounts(current_strat_obs.price_tick,TICK_A,TICK_B,\
@@ -104,8 +103,10 @@ class RollingStrategy:
         # check if position is there
         if self.position_status==1: 
             liq_ranges = [pos_liq_range, current_strat_obs.liquidity_ranges[1]]
+            strategy_info['first_position_timestamp'] = current_strat_obs.time
         elif self.position_status==2:
             liq_ranges = [current_strat_obs.liquidity_ranges[0], pos_liq_range]
+            strategy_info['second_position_timestamp'] = current_strat_obs.time
         elif self.position_status==3:
             none_position = {'price'              : current_strat_obs.price,
                             'lower_bin_tick'     : TICK_A,
@@ -118,4 +119,6 @@ class RollingStrategy:
                             'position_liquidity' : 0,
                             'reset_time'         : current_strat_obs.time}
             liq_ranges = [pos_liq_range, none_position]
+            strategy_info['first_position_timestamp'] = current_strat_obs.time
+
         return liq_ranges, strategy_info

@@ -56,7 +56,7 @@ class StrategyObservation:
         ######################################
         if liquidity_ranges is None and strategy_info is None:
             self.liquidity_ranges,self.strategy_info  = strategy_in.set_liquidity_ranges(self)
-                                 
+
         else: 
             self.liquidity_ranges         = copy.deepcopy(liquidity_ranges)
             
@@ -103,10 +103,10 @@ class StrategyObservation:
                     token_0_in = relevant_swaps.iloc[s]['token_in'] == 'token0'
                     
                     # Low liquidity tokens can have zero liquidity after swap
-                    if relevant_swaps.iloc[s]['virtual_liquidity'] < 1e-9:
+                    if relevant_swaps.iloc[s]['liquidity'] < 1e-9:
                         fraction_fees_earned_position = 1
                     else:
-                        fraction_fees_earned_position = self.liquidity_ranges[i]['position_liquidity']/(self.liquidity_ranges[i]['position_liquidity'] + relevant_swaps.iloc[s]['virtual_liquidity'])
+                        fraction_fees_earned_position = self.liquidity_ranges[i]['position_liquidity']/(self.liquidity_ranges[i]['position_liquidity'] + relevant_swaps.iloc[s]['liquidity'])
 
                     fees_earned_token_0 += in_range * token_0_in     * self.fee_tier * fraction_fees_earned_position * relevant_swaps.iloc[s]['traded_in']
                     fees_earned_token_1 += in_range * (1-token_0_in) * self.fee_tier * fraction_fees_earned_position * relevant_swaps.iloc[s]['traded_in']
@@ -162,6 +162,7 @@ def simulate_strategy(price_data,swap_data,strategy_in,
     for i in range(len(price_data)): 
         # Strategy Initialization
         if i == 0:
+            print('Initializing strategy...')
             strategy_results.append(StrategyObservation(price_data.index[i],
                                               price_data[i],
                                               strategy_in,
@@ -169,7 +170,7 @@ def simulate_strategy(price_data,swap_data,strategy_in,
                                               fee_tier,decimals_0,decimals_1))
         # After initialization
         else:
-            
+            print(strategy_results[i-1].strategy_info)
             relevant_swaps = swap_data[price_data.index[i-1]:price_data.index[i]]
             strategy_results.append(StrategyObservation(price_data.index[i],
                                               price_data[i],

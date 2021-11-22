@@ -91,7 +91,6 @@ class StrategyObservation:
         
         fees_earned_token_0 = 0.0
         fees_earned_token_1 = 0.0
-                
         if len(relevant_swaps) > 0:
             
             # For every swap in this time period
@@ -262,3 +261,123 @@ def analyze_strategy(data_usd,initial_position_value,frequency = 'M'):
     return summary_strat
 
 
+
+def plot_strategy(data_strategy,y_axis_label,base_color = '#ff0000'):
+    import plotly.graph_objects as go
+    CHART_SIZE = 300
+
+    fig_strategy = go.Figure()
+    fig_strategy.add_trace(go.Scatter(
+        x=data_strategy['time'], 
+        y=1/data_strategy['first_position_lower'],
+        fill=None,
+        mode='lines',
+        showlegend = False,
+        line_color=base_color,
+        ))
+    fig_strategy.add_trace(go.Scatter(
+        x=data_strategy['time'], 
+        y=1/data_strategy['first_position_upper'],
+        name='First Position',
+        fill='tonexty', # fill area between trace0 and trace1
+        mode='lines', line_color=base_color))
+
+    fig_strategy.add_trace(go.Scatter(
+        x=data_strategy['time'], 
+        y=1/data_strategy['second_position_lower'],
+        fill=None,
+        mode='lines',
+        showlegend = False,
+        line_color='#6f6f6f'))
+
+    fig_strategy.add_trace(go.Scatter(
+        x=data_strategy['time'], 
+        y=1/data_strategy['second_position_upper'],
+        name='Second Position',
+        fill='tonexty', # fill area between trace0 and trace1
+        mode='lines', line_color='#6f6f6f',))
+
+    fig_strategy.add_trace(go.Scatter(
+        x=data_strategy['time'], 
+        y=1/data_strategy['price'],
+        name='Price',
+        line=dict(width=2,color='black')))
+
+    fig_strategy.update_layout(
+        margin=dict(l=20, r=20, t=40, b=20),
+        height= CHART_SIZE,
+        title = 'Strategy Simulation',
+        xaxis_title="Date",
+        yaxis_title=y_axis_label,
+    )
+
+    fig_strategy.show(renderer="png")
+    
+    
+def plot_position_value(data_strategy):
+    import plotly.graph_objects as go
+    CHART_SIZE = 300
+
+    fig_strategy = go.Figure()
+    fig_strategy.add_trace(go.Scatter(
+        x=data_strategy['time'], 
+        y=data_strategy['value_position_usd'],
+        name='Value of LP Position',
+        line=dict(width=2,color='red')))
+
+    fig_strategy.add_trace(go.Scatter(
+        x=data_strategy['time'], 
+        y=data_strategy['value_hold_usd'],
+        name='Value of Holding',
+        line=dict(width=2,color='blue')))
+
+    fig_strategy.update_layout(
+        margin=dict(l=20, r=20, t=40, b=20),
+        height= CHART_SIZE,
+        title = 'Strategy Simulation — LP Position vs. Holding',
+        xaxis_title="Date",
+        yaxis_title='Position Value',
+    )
+
+    fig_strategy.show(renderer="png")
+    
+    
+def plot_asset_composition(data_strategy,token_0_name,token_1_name):
+    import plotly.graph_objects as go
+    CHART_SIZE = 300
+    # 3 - Asset Composition
+    fig_composition = go.Figure()
+    fig_composition.add_trace(go.Scatter(
+        x=data_strategy['time'], y=data_strategy['token_0_total'],
+        mode='lines',
+        name=token_0_name,
+        line=dict(width=0.5, color='#ff0000'),
+        stackgroup='one', # define stack group
+        groupnorm='percent'
+    ))
+    fig_composition.add_trace(go.Scatter(
+        x=data_strategy['time'], y=data_strategy['token_1_total']/data_strategy['price'],
+        mode='lines',
+        name=token_1_name,
+        line=dict(width=0.5, color='#f4f4f4'),
+        stackgroup='one'
+    ))
+
+    fig_composition.update_layout(
+        showlegend=True,
+        xaxis_type='date',
+        yaxis=dict(
+            type='linear',
+            range=[1, 100],
+            ticksuffix='%'))
+
+    fig_composition.update_layout(
+        margin=dict(l=20, r=20, t=40, b=20),
+        height= CHART_SIZE,
+        title = 'Position Asset Composition',
+        xaxis_title="Date",
+        yaxis_title="Position %",
+        legend_title='Token'
+    )
+
+    fig_composition.show(renderer="png")

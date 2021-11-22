@@ -97,8 +97,8 @@ class StrategyObservation:
             # For every swap in this time period
             for s in range(len(relevant_swaps)):
                 for i in range(len(self.liquidity_ranges)):
-                    in_range   = (self.liquidity_ranges[i]['lower_bin_tick'] <= relevant_swaps.iloc[s]['tick_swap']) and \
-                                 (self.liquidity_ranges[i]['upper_bin_tick'] >= relevant_swaps.iloc[s]['tick_swap'])
+                    in_range   = (self.liquidity_ranges[i]['lower_bin_tick'] <= relevant_swaps.iloc[s]['tick']) and \
+                                 (self.liquidity_ranges[i]['upper_bin_tick'] >= relevant_swaps.iloc[s]['tick'])
 
                     token_0_in = relevant_swaps.iloc[s]['token_in'] == 'token0'
                     

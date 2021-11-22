@@ -178,7 +178,7 @@ class RollingStrategy:
             this_data['token_1_fees']           = strategy_observation.token_1_fees 
             this_data['token_0_fees_uncollected']     = strategy_observation.token_0_fees_uncollected
             this_data['token_1_fees_uncollected']     = strategy_observation.token_1_fees_uncollected
-               
+            
             # Asset Variables
             this_data['token_0_left_over']      = strategy_observation.token_0_left_over
             this_data['token_1_left_over']      = strategy_observation.token_1_left_over
@@ -201,6 +201,6 @@ class RollingStrategy:
             
             this_data['first_position_value']    = strategy_observation.liquidity_ranges[0]['token_0'] + strategy_observation.liquidity_ranges[0]['token_1'] / this_data['price']
             this_data['second_position_value']   = strategy_observation.liquidity_ranges[1]['token_0'] + strategy_observation.liquidity_ranges[1]['token_1'] / this_data['price']
-             
+            
             return this_data
         

@@ -170,7 +170,6 @@ def simulate_strategy(price_data,swap_data,strategy_in,
                                               fee_tier,decimals_0,decimals_1))
         # After initialization
         else:
-            print(strategy_results[i-1].strategy_info)
             relevant_swaps = swap_data[price_data.index[i-1]:price_data.index[i]]
             strategy_results.append(StrategyObservation(price_data.index[i],
                                               price_data[i],
@@ -190,5 +189,76 @@ def simulate_strategy(price_data,swap_data,strategy_in,
             
     return strategy_results
 
+########################################################
+# Extract Strategy Data
+########################################################
+def generate_simulation_series(simulations,strategy_in,token_0_usd_data = None):
+    data_strategy                    = pd.DataFrame([strategy_in.dict_components(i) for i in simulations])
+    data_strategy                    = data_strategy.set_index('time',drop=False)
+    data_strategy                    = data_strategy.sort_index()
+    
+    token_0_initial                  = simulations[0].liquidity_ranges[0]['token_0'] + simulations[0].liquidity_ranges[1]['token_0']
+    token_1_initial                  = simulations[0].liquidity_ranges[0]['token_1'] + simulations[0].liquidity_ranges[1]['token_1']
+    
+    if token_0_usd_data is None:
+        data_strategy['value_position_usd'] = data_strategy['value_position']
+        data_strategy['cum_fees_usd']       = data_strategy['token_0_fees'].cumsum() + (data_strategy['token_1_fees'] / data_strategy['price']).cumsum()
+        data_strategy['token_0_hold_usd']   = token_0_initial
+        data_strategy['token_1_hold_usd']   = token_1_initial / data_strategy['price']
+        data_strategy['value_hold_usd']     = data_strategy['token_0_hold_usd'] + data_strategy['token_1_hold_usd']
+        data_return = data_strategy
+    else:
+        # Merge in usd price data
+        token_0_usd_data['price_0_usd']    = 1/token_0_usd_data['quotePrice']
+        token_0_usd_data                   = token_0_usd_data.sort_index()
+        data_strategy['time_pd']           = pd.to_datetime(data_strategy['time'],utc=True)
+        data_strategy                      = data_strategy.set_index('time_pd')
+        data_return                        = pd.merge_asof(data_strategy,token_0_usd_data['price_0_usd'],on='time_pd',direction='backward',allow_exact_matches = True)
+        data_return['value_position_usd']  = data_return['value_position']*data_return['price_0_usd']
+        data_return['cum_fees_0']          = data_return['token_0_fees'].cumsum() + (data_return['token_1_fees'] / data_return['price']).cumsum()
+        data_return['cum_fees_usd']        = data_return['cum_fees_0']*data_return['price_0_usd']
+        data_return['token_0_hold_usd']    = token_0_initial * data_return['price_0_usd']
+        data_return['token_1_hold_usd']    = token_1_initial * data_return['price_0_usd'] / data_return['price']
+        data_return['value_hold_usd']      = data_return['token_0_hold_usd'] + data_return['token_1_hold_usd']
+        
+    return data_return
+
+
+def analyze_strategy(data_usd,initial_position_value,frequency = 'M'):
+
+    
+    if   frequency == 'M':
+            annualization_factor = 365*24*60
+    elif frequency == 'H':
+            annualization_factor = 365*24
+    elif frequency == 'D':
+            annualization_factor = 365
+
+    days_strategy           = (data_usd['time'].max()-data_usd['time'].min()).days    
+    strategy_last_obs       = data_usd.tail(1)
+    strategy_last_obs       = strategy_last_obs.reset_index(drop=True)
+    net_apr                 = float((strategy_last_obs['value_position_usd']/initial_position_value - 1) * 365 / days_strategy)
+
+    summary_strat = {
+                        'days_strategy'        : days_strategy,
+                        'gross_fee_apr'        : float((strategy_last_obs['cum_fees_usd']/initial_position_value) * 365 / days_strategy),
+                        'gross_fee_return'     : float(strategy_last_obs['cum_fees_usd']/initial_position_value),
+                        'net_apr'              : net_apr,
+                        'net_return'           : float(strategy_last_obs['value_position_usd']/initial_position_value  - 1),
+                        'rebalances'           : data_usd['reset_point'].sum(),
+                        'max_drawdown'         : ( data_usd['value_position_usd'].max() - data_usd['value_position_usd'].min() ) / data_usd['value_position_usd'].max(),
+                        'volatility'           : ((data_usd['value_position_usd'].pct_change().var())**(0.5)) * ((annualization_factor)**(0.5)),
+                        'sharpe_ratio'         : float(net_apr / (((data_usd['value_position_usd'].pct_change().var())**(0.5)) * ((annualization_factor)**(0.5)))),
+                        'impermanent_loss'     : ((strategy_last_obs['value_position_usd'] - strategy_last_obs['value_hold_usd']) / strategy_last_obs['value_hold_usd'])[0],
+                        'mean_first_position'   : (data_usd['first_position_value']/ \
+                                                  (data_usd['first_position_value']+data_usd['second_position_value']+data_usd['value_left_over'])).mean(),
+        
+                        'median_first_position' : (data_usd['first_position_value']/ \
+                                                  (data_usd['first_position_value']+data_usd['second_position_value']+data_usd['value_left_over'])).median(),
+        
+                        'final_value'          : data_usd['value_position_usd'].iloc[-1]
+                    }
+    
+    return summary_strat
 
 

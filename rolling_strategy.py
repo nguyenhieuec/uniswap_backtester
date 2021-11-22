@@ -27,6 +27,8 @@ class RollingStrategy:
         FIRST_POSITION_DURATION = (current_strat_obs.time - strategy_info['first_position_timestamp'])/pd.Timedelta(self.duration)
         
         if FIRST_POSITION_DURATION > 1:
+            current_strat_obs.reset_point = True
+            current_strat_obs.reset_reason = 'first_position_rebalance'
             # Remove liquidity from first position
             current_strat_obs.remove_liquidity([0])
             # Check removed position     
@@ -36,6 +38,8 @@ class RollingStrategy:
         elif 'second_position_timestamp' in strategy_info.keys():
             SECOND_POSITION_DURATION = (current_strat_obs.time - strategy_info['second_position_timestamp'])/pd.Timedelta(self.duration)
             if SECOND_POSITION_DURATION > 1:
+                current_strat_obs.reset_point = True
+                current_strat_obs.reset_reason = 'second_position_rebalance'
                 # Remove liquidity from first position
                 current_strat_obs.remove_liquidity([1])
                 # Check removed position     
@@ -46,6 +50,8 @@ class RollingStrategy:
 
         # If it right time to initialized second position
         elif strategy_info['first_position_timestamp']+pd.Timedelta(self.buffer) < current_strat_obs.time:
+            current_strat_obs.reset_point = True
+            current_strat_obs.reset_reason = 'second_position_initialization'
             # check position initialized
             self.check_position_initialized(current_strat_obs)
             liq_range,strategy_info = self.set_liquidity_ranges(current_strat_obs)
@@ -142,6 +148,59 @@ class RollingStrategy:
             strategy_info['first_position_timestamp'] = self.first_position_timestamp
         if self.second_position_timestamp:
             strategy_info['second_position_timestamp'] = self.second_position_timestamp
-        
 
         return liq_ranges, strategy_info
+
+
+        
+    ########################################################
+    # Extract strategy parameters
+    ########################################################
+    def dict_components(self,strategy_observation):
+            this_data = dict()
+            
+            # General variables
+            this_data['time']                   = strategy_observation.time
+            this_data['price']                  = strategy_observation.price
+            this_data['reset_point']            = strategy_observation.reset_point
+            this_data['reset_reason']           = strategy_observation.reset_reason
+            
+            # Range Variables
+            this_data['first_position_lower']       = strategy_observation.liquidity_ranges[0]['lower_bin_price']
+            this_data['first_position_upper']       = strategy_observation.liquidity_ranges[0]['upper_bin_price']
+            this_data['second_position_lower']      = strategy_observation.liquidity_ranges[1]['lower_bin_price']
+            this_data['second_position_upper']      = strategy_observation.liquidity_ranges[1]['upper_bin_price']
+            # this_data['reset_range_lower']      = strategy_observation.strategy_info['reset_range_lower']
+            # this_data['reset_range_upper']      = strategy_observation.strategy_info['reset_range_upper']
+            
+            # Fee Varaibles
+            this_data['token_0_fees']           = strategy_observation.token_0_fees 
+            this_data['token_1_fees']           = strategy_observation.token_1_fees 
+            this_data['token_0_fees_uncollected']     = strategy_observation.token_0_fees_uncollected
+            this_data['token_1_fees_uncollected']     = strategy_observation.token_1_fees_uncollected
+               
+            # Asset Variables
+            this_data['token_0_left_over']      = strategy_observation.token_0_left_over
+            this_data['token_1_left_over']      = strategy_observation.token_1_left_over
+            
+            total_token_0 = 0.0
+            total_token_1 = 0.0
+            for i in range(len(strategy_observation.liquidity_ranges)):
+                total_token_0 += strategy_observation.liquidity_ranges[i]['token_0']
+                total_token_1 += strategy_observation.liquidity_ranges[i]['token_1']
+                
+            this_data['token_0_allocated']      = total_token_0
+            this_data['token_1_allocated']      = total_token_1
+            this_data['token_0_total']          = total_token_0 + strategy_observation.token_0_left_over + strategy_observation.token_0_fees_uncollected
+            this_data['token_1_total']          = total_token_1 + strategy_observation.token_1_left_over + strategy_observation.token_1_fees_uncollected
+
+            # Value Variables
+            this_data['value_position']         = this_data['token_0_total'] + this_data['token_1_total']         / this_data['price']
+            this_data['value_allocated']        = this_data['token_0_allocated'] + this_data['token_1_allocated'] / this_data['price']
+            this_data['value_left_over']        = this_data['token_0_left_over'] + this_data['token_1_left_over'] / this_data['price']
+            
+            this_data['first_position_value']    = strategy_observation.liquidity_ranges[0]['token_0'] + strategy_observation.liquidity_ranges[0]['token_1'] / this_data['price']
+            this_data['second_position_value']   = strategy_observation.liquidity_ranges[1]['token_0'] + strategy_observation.liquidity_ranges[1]['token_1'] / this_data['price']
+             
+            return this_data
+        

@@ -74,8 +74,8 @@ class RollingStrategy:
         ###########################################################
         strategy_info = dict()
         # Calculate the ticks
-        tick_lower      = current_strat_obs.price
-        tick_upper      = (1+self.percentage)*current_strat_obs.price
+        tick_lower      = (1-self.percentage/2)*current_strat_obs.price
+        tick_upper      = (1+self.percentage/2)*current_strat_obs.price
 
         TICK_A_PRE         = int(math.log(current_strat_obs.decimal_adjustment*tick_lower,1.0001))
         TICK_A             = int(round(TICK_A_PRE/current_strat_obs.tickSpacing)*current_strat_obs.tickSpacing)
@@ -117,7 +117,6 @@ class RollingStrategy:
                         'token_1'            : limit_1_amount,
                         'position_liquidity' : liquidity_placed_limit,
                         'reset_time'         : current_strat_obs.time}
-        print(f'Setting liquidity ranges: {liquidity_placed_limit}')
         liq_ranges = []
         # check if position is there
         if self.position_status==1: 
@@ -149,6 +148,8 @@ class RollingStrategy:
         if self.second_position_timestamp:
             strategy_info['second_position_timestamp'] = self.second_position_timestamp
 
+        current_strat_obs.liquidity_in_0 -= limit_0_amount
+        current_strat_obs.liquidity_in_1 -= limit_1_amount
         return liq_ranges, strategy_info
 
 
@@ -191,8 +192,8 @@ class RollingStrategy:
                 
             this_data['token_0_allocated']      = total_token_0
             this_data['token_1_allocated']      = total_token_1
-            this_data['token_0_total']          = total_token_0 + strategy_observation.token_0_left_over + strategy_observation.token_0_fees_uncollected
-            this_data['token_1_total']          = total_token_1 + strategy_observation.token_1_left_over + strategy_observation.token_1_fees_uncollected
+            this_data['token_0_total']          = total_token_0 + strategy_observation.token_0_left_over + strategy_observation.token_0_fees_uncollected + strategy_observation.liquidity_in_0
+            this_data['token_1_total']          = total_token_1 + strategy_observation.token_1_left_over + strategy_observation.token_1_fees_uncollected + strategy_observation.liquidity_in_1
 
             # Value Variables
             this_data['value_position']         = this_data['token_0_total'] + this_data['token_1_total']         / this_data['price']

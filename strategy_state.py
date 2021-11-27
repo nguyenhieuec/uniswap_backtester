@@ -1,4 +1,5 @@
 import math
+import numpy as np
 import pandas as pd
 import univ3_funcs
 import copy
@@ -88,33 +89,22 @@ class StrategyObservation:
     # Accrue earned fees (not supply into LP yet)
     ########################################################               
     def accrue_fees(self,relevant_swaps):   
-        
         fees_earned_token_0 = 0.0
         fees_earned_token_1 = 0.0
-        if len(relevant_swaps) > 0:
+        # For every swap in this time period
+        for lr in self.liquidity_ranges:
+            in_range = np.logical_and(relevant_swaps['tick'] >= lr['lower_bin_tick'],relevant_swaps['tick'] <= lr['upper_bin_tick'])
+            token_0_in = relevant_swaps['token_in'] == 'token0'
+            # Low liquidity tokens can have zero liquidity after swap
+            fraction_fees_earned_position = np.where(relevant_swaps['liquidity']<1e-9, 1, lr['position_liquidity']/(lr['position_liquidity'] + relevant_swaps['liquidity'])) 
+            fees_earned_token_0 += np.sum(np.logical_and(in_range, token_0_in)* self.fee_tier * relevant_swaps['traded_in'] * fraction_fees_earned_position)
+            fees_earned_token_1 += np.sum(np.logical_and(in_range, 1-token_0_in)* self.fee_tier * relevant_swaps['traded_in'] * fraction_fees_earned_position)
             
-            # For every swap in this time period
-            for s in range(len(relevant_swaps)):
-                for i in range(len(self.liquidity_ranges)):
-                    in_range   = (self.liquidity_ranges[i]['lower_bin_tick'] <= relevant_swaps.iloc[s]['tick']) and \
-                                 (self.liquidity_ranges[i]['upper_bin_tick'] >= relevant_swaps.iloc[s]['tick'])
-
-                    token_0_in = relevant_swaps.iloc[s]['token_in'] == 'token0'
-                    
-                    # Low liquidity tokens can have zero liquidity after swap
-                    if relevant_swaps.iloc[s]['liquidity'] < 1e-9:
-                        fraction_fees_earned_position = 1
-                    else:
-                        fraction_fees_earned_position = self.liquidity_ranges[i]['position_liquidity']/(self.liquidity_ranges[i]['position_liquidity'] + relevant_swaps.iloc[s]['liquidity'])
-
-                    fees_earned_token_0 += in_range * token_0_in     * self.fee_tier * fraction_fees_earned_position * relevant_swaps.iloc[s]['traded_in']
-                    fees_earned_token_1 += in_range * (1-token_0_in) * self.fee_tier * fraction_fees_earned_position * relevant_swaps.iloc[s]['traded_in']
-        
         self.token_0_fees_uncollected += fees_earned_token_0
         self.token_1_fees_uncollected += fees_earned_token_1
         
-        return fees_earned_token_0,fees_earned_token_1            
-     
+        return fees_earned_token_0,fees_earned_token_1 
+
     ########################################################
     # Rebalance: Remove all liquidity positions
     # Not dependent on strategy
@@ -152,23 +142,18 @@ class StrategyObservation:
 # the time point, and contains the pool price (token 1 per token 0)
 ########################################################
 
-def simulate_strategy(price_data,swap_data,strategy_in,
+def simulate_strategy(price_data:pd.Series,swap_data:pd.DataFrame,strategy_in,
                        liquidity_in_0,liquidity_in_1,fee_tier,decimals_0,decimals_1):
-
-    strategy_results = []    
-  
-    # Go through every time period in the data that was passet
-    for i in range(len(price_data)): 
-        # Strategy Initialization
-        if i == 0:
-            print('Initializing strategy...')
-            strategy_results.append(StrategyObservation(price_data.index[i],
-                                              price_data[i],
+    print('Initializing strategy...')
+    strategy_results = [StrategyObservation(price_data.index[0],
+                                              price_data[0],
                                               strategy_in,
                                               liquidity_in_0,liquidity_in_1,
-                                              fee_tier,decimals_0,decimals_1))
+                                              fee_tier,decimals_0,decimals_1)]    
+  
+    # Go through every time period in the data that was passet
+    for i in range(1,len(price_data)): 
         # After initialization
-        else:
             relevant_swaps = swap_data[price_data.index[i-1]:price_data.index[i]]
             strategy_results.append(StrategyObservation(price_data.index[i],
                                               price_data[i],
@@ -351,7 +336,7 @@ def plot_asset_composition(data_strategy,token_0_name,token_1_name):
         x=data_strategy['time'], y=data_strategy['token_0_total'],
         mode='lines',
         name=token_0_name,
-        line=dict(width=0.5, color='#ff0000'),
+        line=dict(width=0.5, color='blue'),
         stackgroup='one', # define stack group
         groupnorm='percent'
     ))

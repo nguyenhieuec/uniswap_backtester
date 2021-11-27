@@ -87,12 +87,12 @@ class RollingStrategy:
         # check if position is there
         if self.position_status == 3:
             # Just use half the amount if position isn't initialized.
-            limit_amount_0 = current_strat_obs.liquidity_in_0/2.0
-            limit_amount_1 = current_strat_obs.liquidity_in_1/2.0
+            limit_amount_0 = current_strat_obs.token_0_left_over/2.0
+            limit_amount_1 = current_strat_obs.token_1_left_over/2.0
         else:
             # Store each token amount supplied to pool
-            limit_amount_0 = current_strat_obs.liquidity_in_0
-            limit_amount_1 = current_strat_obs.liquidity_in_1
+            limit_amount_0 = current_strat_obs.token_0_left_over
+            limit_amount_1 = current_strat_obs.token_1_left_over
 
 
         liquidity_placed_limit        = int(univ3_funcs.get_liquidity(current_strat_obs.price_tick,TICK_A,TICK_B, \
@@ -104,7 +104,7 @@ class RollingStrategy:
         limit_amount_1  -= limit_1_amount
         
         # Check we didn't allocate more liquidiqity than available
-        assert (current_strat_obs.liquidity_in_0 + (current_strat_obs.liquidity_in_1/current_strat_obs.price)) >= (limit_0_amount + (limit_1_amount/current_strat_obs.price))
+        assert (current_strat_obs.token_0_left_over + (current_strat_obs.token_1_left_over/current_strat_obs.price)) >= (limit_0_amount + (limit_1_amount/current_strat_obs.price))
 
         pos_liq_range = {'price'             : current_strat_obs.price,
                         'lower_bin_tick'     : TICK_A,
@@ -147,8 +147,8 @@ class RollingStrategy:
         if self.second_position_timestamp:
             strategy_info['second_position_timestamp'] = self.second_position_timestamp
 
-        current_strat_obs.liquidity_in_0 -= limit_0_amount
-        current_strat_obs.liquidity_in_1 -= limit_1_amount
+        current_strat_obs.token_0_left_over -= limit_0_amount
+        current_strat_obs.token_1_left_over -= limit_1_amount
         return liq_ranges, strategy_info
 
 
@@ -191,8 +191,8 @@ class RollingStrategy:
                 
             this_data['token_0_allocated']      = total_token_0
             this_data['token_1_allocated']      = total_token_1
-            this_data['token_0_total']          = total_token_0 + strategy_observation.token_0_left_over + strategy_observation.token_0_fees_uncollected + strategy_observation.liquidity_in_0
-            this_data['token_1_total']          = total_token_1 + strategy_observation.token_1_left_over + strategy_observation.token_1_fees_uncollected + strategy_observation.liquidity_in_1
+            this_data['token_0_total']          = total_token_0 + strategy_observation.token_0_left_over + strategy_observation.token_0_fees_uncollected 
+            this_data['token_1_total']          = total_token_1 + strategy_observation.token_1_left_over + strategy_observation.token_1_fees_uncollected 
 
             # Value Variables
             this_data['value_position']         = this_data['token_0_total'] + this_data['token_1_total']         / this_data['price']

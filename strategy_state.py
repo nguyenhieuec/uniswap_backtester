@@ -9,13 +9,11 @@ class StrategyObservation:
     def __init__(self,timepoint,
                      current_price,
                      strategy_in,
-                     liquidity_in_0,
-                     liquidity_in_1,
+                     token_0_left_over,
+                     token_1_left_over,
                      fee_tier,
                      decimals_0,
                      decimals_1,
-                     token_0_left_over        = 0.0,
-                     token_1_left_over        = 0.0,
                      token_0_fees_uncollected = 0.0,
                      token_1_fees_uncollected = 0.0,
                      liquidity_ranges         = None,
@@ -29,13 +27,11 @@ class StrategyObservation:
         
         self.time                        = timepoint
         self.price                       = current_price
-        self.liquidity_in_0              = liquidity_in_0
-        self.liquidity_in_1              = liquidity_in_1
+        self.token_0_left_over           = token_0_left_over
+        self.token_1_left_over           = token_1_left_over
         self.fee_tier                    = fee_tier
         self.decimals_0                  = decimals_0
         self.decimals_1                  = decimals_1
-        self.token_0_left_over           = token_0_left_over
-        self.token_1_left_over           = token_1_left_over
         self.token_0_fees_uncollected    = token_0_fees_uncollected
         self.token_1_fees_uncollected    = token_1_fees_uncollected
         self.reset_point                 = False
@@ -131,11 +127,9 @@ class StrategyObservation:
             self.liquidity_ranges[i]['position_liquidity'] = 0
         
         # Add pending tokens not being used in current positions
-        self.liquidity_in_0 = self.liquidity_in_0 + removed_amount_0 + self.token_0_left_over + self.token_0_fees_uncollected
-        self.liquidity_in_1 = self.liquidity_in_1 + removed_amount_1 + self.token_1_left_over + self.token_1_fees_uncollected
+        self.token_0_left_over = self.token_0_left_over + removed_amount_0 + self.token_0_fees_uncollected
+        self.token_1_left_over = self.token_1_left_over + removed_amount_1 + self.token_1_fees_uncollected
         
-        self.token_0_left_over = 0.0
-        self.token_1_left_over = 0.0
         
         self.token_0_fees_uncollected = 0.0
         self.token_1_fees_uncollected = 0.0
@@ -145,12 +139,12 @@ class StrategyObservation:
 ########################################################
 
 def simulate_strategy(price_data:pd.Series,swap_data:pd.DataFrame,strategy_in,
-                       liquidity_in_0,liquidity_in_1,fee_tier,decimals_0,decimals_1):
+                       token_0_left_over,token_1_left_over,fee_tier,decimals_0,decimals_1):
     print('Initializing strategy...')
     strategy_results = [StrategyObservation(price_data.index[0],
                                               price_data[0],
                                               strategy_in,
-                                              liquidity_in_0,liquidity_in_1,
+                                              token_0_left_over,token_1_left_over,
                                               fee_tier,decimals_0,decimals_1)]    
   
     # Go through every time period in the data that was passet
@@ -160,13 +154,11 @@ def simulate_strategy(price_data:pd.Series,swap_data:pd.DataFrame,strategy_in,
             strategy_results.append(StrategyObservation(price_data.index[i],
                                               price_data[i],
                                               strategy_in,
-                                              strategy_results[i-1].liquidity_in_0,
-                                              strategy_results[i-1].liquidity_in_1,
+                                              strategy_results[i-1].token_0_left_over,
+                                              strategy_results[i-1].token_1_left_over,
                                               strategy_results[i-1].fee_tier,
                                               strategy_results[i-1].decimals_0,
                                               strategy_results[i-1].decimals_1,
-                                              strategy_results[i-1].token_0_left_over,
-                                              strategy_results[i-1].token_1_left_over,
                                               strategy_results[i-1].token_0_fees_uncollected,
                                               strategy_results[i-1].token_1_fees_uncollected,
                                               strategy_results[i-1].liquidity_ranges,
@@ -183,8 +175,8 @@ def generate_simulation_series(simulations,strategy_in,token_0_usd_data = None):
     data_strategy                    = data_strategy.set_index('time',drop=False)
     data_strategy                    = data_strategy.sort_index()
     
-    token_0_initial                  = simulations[0].liquidity_ranges[0]['token_0'] + simulations[0].liquidity_ranges[1]['token_0'] + simulations[0].liquidity_in_0
-    token_1_initial                  = simulations[0].liquidity_ranges[0]['token_1'] + simulations[0].liquidity_ranges[1]['token_1'] + simulations[0].liquidity_in_1
+    token_0_initial                  = simulations[0].liquidity_ranges[0]['token_0'] + simulations[0].liquidity_ranges[1]['token_0'] + simulations[0].token_0_left_over
+    token_1_initial                  = simulations[0].liquidity_ranges[0]['token_1'] + simulations[0].liquidity_ranges[1]['token_1'] + simulations[0].token_1_left_over
     
     if token_0_usd_data is None:
         data_strategy['value_position_usd'] = data_strategy['value_position']

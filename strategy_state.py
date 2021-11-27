@@ -1,8 +1,9 @@
 import math
+import copy
+import univ3_funcs
 import numpy as np
 import pandas as pd
-import univ3_funcs
-import copy
+import plotly.graph_objects as go
 
 class StrategyObservation:
     def __init__(self,timepoint,
@@ -181,8 +182,8 @@ def generate_simulation_series(simulations,strategy_in,token_0_usd_data = None):
     data_strategy                    = data_strategy.set_index('time',drop=False)
     data_strategy                    = data_strategy.sort_index()
     
-    token_0_initial                  = simulations[0].liquidity_ranges[0]['token_0'] + simulations[0].liquidity_ranges[1]['token_0']
-    token_1_initial                  = simulations[0].liquidity_ranges[0]['token_1'] + simulations[0].liquidity_ranges[1]['token_1']
+    token_0_initial                  = simulations[0].liquidity_ranges[0]['token_0'] + simulations[0].liquidity_ranges[1]['token_0'] + simulations[0].liquidity_in_0
+    token_1_initial                  = simulations[0].liquidity_ranges[0]['token_1'] + simulations[0].liquidity_ranges[1]['token_1'] + simulations[0].liquidity_in_1
     
     if token_0_usd_data is None:
         data_strategy['value_position_usd'] = data_strategy['value_position']
@@ -248,7 +249,6 @@ def analyze_strategy(data_usd,initial_position_value,frequency = 'M'):
 
 
 def plot_strategy(data_strategy,y_axis_label,base_color = '#ff0000'):
-    import plotly.graph_objects as go
     CHART_SIZE = 300
 
     fig_strategy = go.Figure()
@@ -300,7 +300,6 @@ def plot_strategy(data_strategy,y_axis_label,base_color = '#ff0000'):
     
     
 def plot_position_value(data_strategy):
-    import plotly.graph_objects as go
     CHART_SIZE = 300
 
     fig_strategy = go.Figure()
@@ -328,7 +327,6 @@ def plot_position_value(data_strategy):
     
     
 def plot_asset_composition(data_strategy,token_0_name,token_1_name):
-    import plotly.graph_objects as go
     CHART_SIZE = 300
     # 3 - Asset Composition
     fig_composition = go.Figure()

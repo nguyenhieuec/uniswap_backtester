@@ -94,6 +94,8 @@ class RollingStrategy:
             limit_amount_0 = current_strat_obs.token_0_left_over
             limit_amount_1 = current_strat_obs.token_1_left_over
 
+        ###########################################################
+        # TODO Add Swap Feature to liquidity ranges to balance out the liquidity
 
         liquidity_placed_limit        = int(univ3_funcs.get_liquidity(current_strat_obs.price_tick,TICK_A,TICK_B, \
                                                                     limit_amount_0,limit_amount_1,current_strat_obs.decimals_0,current_strat_obs.decimals_1))

@@ -66,7 +66,6 @@ class RollingStrategy:
         first_not_initialized = int(current_strat_obs.liquidity_ranges[0]['position_liquidity']==0)
         second_not_initialized = int(current_strat_obs.liquidity_ranges[1]['position_liquidity']==0)
         self.position_status =  first_not_initialized + 2*second_not_initialized
-
         
     def set_liquidity_ranges(self, current_strat_obs):
         ###########################################################
@@ -83,6 +82,7 @@ class RollingStrategy:
         TICK_B_PRE        = int(math.log(current_strat_obs.decimal_adjustment*tick_upper,1.0001))
         TICK_B            = int(round(TICK_B_PRE/current_strat_obs.tickSpacing)*current_strat_obs.tickSpacing)
 
+        # print(self.position_status)
 
         # check if position is there
         if self.position_status == 3:
@@ -104,10 +104,9 @@ class RollingStrategy:
         limit_amount_1  -= limit_1_amount
         
         # Check we didn't allocate more liquidiqity than available
-        assert current_strat_obs.liquidity_in_0 >= limit_amount_0
-        assert current_strat_obs.liquidity_in_1 >= limit_amount_1
+        assert (current_strat_obs.liquidity_in_0 + (current_strat_obs.liquidity_in_1/current_strat_obs.price)) >= (limit_0_amount + (limit_1_amount/current_strat_obs.price))
 
-        pos_liq_range = {'price'              : current_strat_obs.price,
+        pos_liq_range = {'price'             : current_strat_obs.price,
                         'lower_bin_tick'     : TICK_A,
                         'upper_bin_tick'     : TICK_B,
                         'lower_bin_price'    : tick_lower,

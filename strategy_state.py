@@ -129,15 +129,16 @@ class StrategyObservation:
             removed_amount_1   += token_amounts[1]
             # update removed liqudity
             self.liquidity_ranges[i]['position_liquidity'] = 0
-        self.liquidity_in_0 = removed_amount_0 + self.token_0_left_over + self.token_0_fees_uncollected
-        self.liquidity_in_1 = removed_amount_1 + self.token_1_left_over + self.token_1_fees_uncollected
+        
+        # Add pending tokens not being used in current positions
+        self.liquidity_in_0 = self.liquidity_in_0 + removed_amount_0 + self.token_0_left_over + self.token_0_fees_uncollected
+        self.liquidity_in_1 = self.liquidity_in_1 + removed_amount_1 + self.token_1_left_over + self.token_1_fees_uncollected
         
         self.token_0_left_over = 0.0
         self.token_1_left_over = 0.0
         
         self.token_0_fees_uncollected = 0.0
         self.token_1_fees_uncollected = 0.0
-        
 ########################################################
 # Simulate reset strategy using a Pandas series called price_data, which has as an index
 # the time point, and contains the pool price (token 1 per token 0)

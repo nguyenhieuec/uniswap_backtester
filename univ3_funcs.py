@@ -1,3 +1,4 @@
+import numpy as np
 """
 Created on Mon Jun 14 18:53:09 2021
 
@@ -116,7 +117,28 @@ def get_liquidity(tick,tickA,tickB,amount0,amount1,decimal0,decimal1):
             return liquidity1
 
 
-        
+def swap_tokens(amount0, amount1, lower_tick, upper_tick, current_tick, decimal_adjustment):
+    token0, token1  = 0.0, 0.0
+    price = decimal_adjustment/(1.0001**current_tick)
+    total_amount = amount0 + amount1*price
 
-        
+    if upper_tick <= current_tick:
+        # convert amount1 to amount0. 
+        token0 = total_amount
+        token1 = 0.0
+    elif lower_tick >= current_tick:
+        # convert amount0 to amount1.
+        token1 = total_amount/price
+        token0 = 0.0
+    else:
+        price_lower = decimal_adjustment/(1.0001**lower_tick)
+        price_upper = decimal_adjustment/(1.0001**upper_tick)
+        sqrC = np.sqrt(price)
+        sqrL = np.sqrt(price_lower)
+        sqrU = np.sqrt(price_upper)
+        amounts_ratio = (sqrC-sqrL)*(sqrU*sqrC)/(sqrU-sqrC)
+        token0 = float(total_amount)/(amounts_ratio*price+1)
+        token1 = token0*amounts_ratio
+
+    return token0, token1
         

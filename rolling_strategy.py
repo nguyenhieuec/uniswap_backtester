@@ -73,8 +73,8 @@ class RollingStrategy:
         ###########################################################
         strategy_info = dict()
         # Calculate the ticks
-        tick_lower      = (1-self.percentage/2)*current_strat_obs.price
-        tick_upper      = (1+self.percentage/2)*current_strat_obs.price
+        tick_lower      = current_strat_obs.price/1.0001
+        tick_upper      = (1+self.percentage)*current_strat_obs.price
 
         TICK_A_PRE         = int(math.log(current_strat_obs.decimal_adjustment*tick_lower,1.0001))
         TICK_A             = int(round(TICK_A_PRE/current_strat_obs.tickSpacing)*current_strat_obs.tickSpacing)
@@ -82,7 +82,12 @@ class RollingStrategy:
         TICK_B_PRE        = int(math.log(current_strat_obs.decimal_adjustment*tick_upper,1.0001))
         TICK_B            = int(round(TICK_B_PRE/current_strat_obs.tickSpacing)*current_strat_obs.tickSpacing)
 
-        # print(self.position_status)
+        ###########################################################
+        # TODO Add gas costs
+        ###########################################################
+        print("before:", current_strat_obs.token_0_left_over, current_strat_obs.token_1_left_over)
+        current_strat_obs.token_0_left_over,  current_strat_obs.token_1_left_over = univ3_funcs.swap_tokens( current_strat_obs.token_0_left_over,  current_strat_obs.token_1_left_over, TICK_A, TICK_B, current_strat_obs.price_tick, current_strat_obs.decimal_adjustment)
+        print("after:", current_strat_obs.token_0_left_over, current_strat_obs.token_1_left_over)
 
         # check if position is there
         if self.position_status == 3:
@@ -93,9 +98,6 @@ class RollingStrategy:
             # Store each token amount supplied to pool
             limit_amount_0 = current_strat_obs.token_0_left_over
             limit_amount_1 = current_strat_obs.token_1_left_over
-
-        ###########################################################
-        # TODO Add Swap Feature to liquidity ranges to balance out the liquidity
 
         liquidity_placed_limit        = int(univ3_funcs.get_liquidity(current_strat_obs.price_tick,TICK_A,TICK_B, \
                                                                     limit_amount_0,limit_amount_1,current_strat_obs.decimals_0,current_strat_obs.decimals_1))

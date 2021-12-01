@@ -177,7 +177,8 @@ def generate_simulation_series(simulations,strategy_in,token_0_usd_data = None):
     
     token_0_initial                  = simulations[0].liquidity_ranges[0]['token_0'] + simulations[0].liquidity_ranges[1]['token_0'] + simulations[0].token_0_left_over
     token_1_initial                  = simulations[0].liquidity_ranges[0]['token_1'] + simulations[0].liquidity_ranges[1]['token_1'] + simulations[0].token_1_left_over
-    
+    total_initial                    = token_0_initial + token_1_initial/data_strategy['price'][0]
+    token_0_initial, token_1_initial = total_initial/2, total_initial*data_strategy['price'][0]/2
     if token_0_usd_data is None:
         data_strategy['value_position_usd'] = data_strategy['value_position']
         data_strategy['cum_fees_usd']       = data_strategy['token_0_fees'].cumsum() + (data_strategy['token_1_fees'] / data_strategy['price']).cumsum()

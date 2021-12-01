@@ -91,7 +91,8 @@ class RollingStrategy:
         limit_amount_1  -= limit_1_amount
         
         # Check we didn't allocate more liquidiqity than available
-        assert (current_strat_obs.token_0_left_over + (current_strat_obs.token_1_left_over/current_strat_obs.price)) >= (limit_0_amount + (limit_1_amount/current_strat_obs.price))
+        assert current_strat_obs.token_0_left_over >= limit_amount_0
+        assert current_strat_obs.token_0_left_over >= limit_amount_1
 
         pos_liq_range = {'price'             : current_strat_obs.price,
                         'lower_bin_tick'     : TICK_A,
@@ -116,6 +117,8 @@ class RollingStrategy:
             self.second_position_timestamp = strategy_info['second_position_timestamp']
 
         elif current_strat_obs.reset_reason=='':
+            current_strat_obs.reset_reason = 'first_position_initialization'
+            current_strat_obs.reset_point = True
             none_position = {'price'              : current_strat_obs.price,
                             'lower_bin_tick'     : TICK_A,
                             'upper_bin_tick'     : TICK_B,

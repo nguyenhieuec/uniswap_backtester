@@ -122,11 +122,11 @@ def swap_tokens(amount0, amount1, lower_tick, upper_tick, current_tick, decimal_
     price = decimal_adjustment/(1.0001**current_tick)
     total_amount = amount0 + amount1*price
 
-    if upper_tick <= current_tick:
+    if lower_tick >= current_tick:
         # convert amount1 to amount0. 
         token0 = total_amount
         token1 = 0.0
-    elif lower_tick >= current_tick:
+    elif upper_tick <= current_tick:
         # convert amount0 to amount1.
         token1 = total_amount/price
         token0 = 0.0

@@ -18,10 +18,7 @@ class RollingStrategy:
     def check_strategy(self,current_strat_obs,strategy_info):
         
         #####################################
-        #
-        # This strategy rebalances in one scenarios:
-        # 1. When position timestamp has passed duration
-        #
+        # This strategy rebalances, when position timestamp has passed duration
         #####################################
         FIRST_POSITION_DURATION = (current_strat_obs.time - strategy_info['first_position_timestamp'])/pd.Timedelta(self.duration)
         
@@ -30,8 +27,6 @@ class RollingStrategy:
             current_strat_obs.reset_reason = 'first_position_rebalance'
             # Remove liquidity from first position
             current_strat_obs.remove_liquidity([0])
-            # Check removed position     
-            # self.check_position_initialized(current_strat_obs)
             liq_range,strategy_info = self.set_liquidity_ranges(current_strat_obs)
 
         elif 'second_position_timestamp' in strategy_info.keys():
@@ -41,8 +36,6 @@ class RollingStrategy:
                 current_strat_obs.reset_reason = 'second_position_rebalance'
                 # Remove liquidity from first position
                 current_strat_obs.remove_liquidity([1])
-                # Check removed position     
-                # self.check_position_initialized(current_strat_obs)  
                 liq_range,strategy_info = self.set_liquidity_ranges(current_strat_obs)
             else:
                 liq_range = current_strat_obs.liquidity_ranges
@@ -51,8 +44,6 @@ class RollingStrategy:
         elif strategy_info['first_position_timestamp']+pd.Timedelta(self.buffer) < current_strat_obs.time:
             current_strat_obs.reset_point = True
             current_strat_obs.reset_reason = 'second_position_initialization'
-            # check position initialized
-            # self.check_position_initialized(current_strat_obs)
             liq_range,strategy_info = self.set_liquidity_ranges(current_strat_obs)
         else:
             liq_range = current_strat_obs.liquidity_ranges

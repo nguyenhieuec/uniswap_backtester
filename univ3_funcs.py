@@ -137,8 +137,8 @@ def swap_tokens(amount0, amount1, lower_tick, upper_tick, current_tick, decimal_
         sqrL = np.sqrt(price_lower)
         sqrU = np.sqrt(price_upper)
         amounts_ratio = (sqrC-sqrL)*(sqrU*sqrC)/(sqrU-sqrC)
-        token0 = float(total_amount)/(amounts_ratio*price+1)
-        token1 = token0*amounts_ratio
+        token1 = float(total_amount)/(amounts_ratio+price)
+        token0 = token1*amounts_ratio
 
     return token0, token1
         
